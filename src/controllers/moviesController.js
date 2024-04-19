@@ -2,6 +2,7 @@ const path = require("path");
 const db = require("../database/models");
 const sequelize = db.sequelize;
 const { Op } = require("sequelize");
+const { validationResult } = require('express-validator');
 
 //Aqui tienen una forma de llamar a cada uno de los modelos
 // const {Movies,Genres,Actor} = require('../database/models');
@@ -43,12 +44,56 @@ const moviesController = {
     });
   },
   //Aqui dispongo las rutas para trabajar con el CRUD
-  add: function (req, res) {},
-  create: function (req, res) {},
-  edit: function (req, res) {},
-  update: function (req, res) {},
-  delete: function (req, res) {},
-  destroy: function (req, res) {},
+  add: function (req, res) {
+    db.Genre.findAll()
+    .then(generos=>{
+        res.render("moviesAdd", {allGenres: generos})
+
+    })
+    .catch(error=>{
+        console.log(error);
+    })   
+},
+create: function (req,res){
+
+  let createErrors = validationResult(req);
+
+  if(createErrors.isEmpty()){
+
+      const {title, rating, awards, release_date, length, genre_id} = req.body;
+
+      db.Movie.create({
+          title,
+          rating: parseInt(rating),
+          awards: parseInt(awards),
+          release_date,
+          length: parseInt(length),
+          genre_id: parseInt(genre_id)
+      })
+      .then(movie=>{
+          res.redirect("/movies/detail/"+movie.id)
+      })
+      .catch(error=>{
+          console.log(error);
+      })
+  }else{
+
+      db.Genre.findAll()
+      .then(generos=>{
+          res.render("moviesAdd", {allGenres:generos, errors: createErrors.mapped(), old:req.bopdy})
+
+      })
+      .catch(error=>{
+          console.log(error);
+      })
+     
+  }
+  
+},
+  // edit: function (req, res) {},
+  // update: function (req, res) {},
+  // delete: function (req, res) {},
+  // destroy: function (req, res) {},
 };
 
 module.exports = moviesController;
